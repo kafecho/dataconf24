@@ -45,7 +45,6 @@ Guillaume (**G**) Belrose
 
 ---
 
-<!-- backgroundColor: Cornsilk -->
 # Discovery
 
 ![drop-shadow bg right:70% h:90%](assets/meme.jpg)
@@ -96,7 +95,7 @@ with tableau_server.auth.sign_in(tableau_auth):
 
 # (Meta)Data Engineering
 
-![drop-shadow h:450px](assets/meta-data-engineering.png)
+![h:450px](assets/meta-data-engineering.png)
 
 ---
 
@@ -125,10 +124,9 @@ flowchart LR
 
 ---
 
-<!-- backgroundColor: LightSteelBlue -->
 # Extend right: data pipelines with dbt
 
-![drop-shadow h:450px](assets/data-pipelines-with-dbt.png)
+![h:410px](assets/data-pipelines-with-dbt.png)
 
 ---
 
@@ -152,7 +150,7 @@ flowchart LR
 
 # From checks to **labels**
 
-![drop-shadow](assets/data-labels.png)
+![h:350px](assets/data-labels.png)
 
 ---
 
@@ -196,8 +194,6 @@ models:
 ![drop-shadow](assets/data-quality-labels-example.png)
 
 ---
-
-<!-- backgroundColor: PaleTurquoise -->
 
 # Shift left: should you push this to production?
 ```SQL
@@ -279,8 +275,6 @@ All Finished 📜 🎉!
 ### Audit trail
 
 ---
-
-<!-- backgroundColor: White -->
 
 # To recap
 
