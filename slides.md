@@ -1,6 +1,6 @@
 ---
 marp: true
-theme: gaia
+theme: default
 ---
 
 <style>
@@ -10,178 +10,295 @@ blockquote {
   margin: 1.5em 10px;
   padding: 0.5em 10px;
 }
+
+section.lead h1 {
+  text-align: center;
+}
 </style>
 
-<!-- _class: lead -->
+![bg right:50% w:60%](assets/equal-experts-logo-white-blue-background.png)
 
-![bg right w:500px](assets/equal-experts-logo-white-blue-background.png)
-
-# TDD for Data Engineering
+# Applying engineering principles to reporting
 
 Guillaume (**G**) Belrose
 
 --- 
+<!-- paginate: true -->
 <!-- header: ![image w:120px](assets/equal-experts-logo-white-blue-background.png) -->
+<!-- footer: Applying engineering principles to reporting -->
 
-![bg w:75%](assets/hands-up.jpg) 
+# Data Pipelines: What | How
 
---- 
-
-![bg h:75%](assets/darth-vader-meme.jpg) 
-
-<!-- _footer: Make your own: https://imgflip.com/memegenerator/19005569/Darth-Vader -->
+![](assets/data-pipelines.png)
 
 ---
 
-<!-- paginate: true -->
-<!-- footer: TDD for Data Engineering -->
+# Reporting 101
+
+![w:900px](assets/reporting-101.png)
+
+---
 
 # Agenda
 
-- Some context on Data Engineering
-- EL**T** Data Pipelines
-- Data Pipelines with TDD
-- Experiences from production
+## Discovery, extend right & shift left
 
 ---
 
-# What: Data Pipelines
+<!-- backgroundColor: Cornsilk -->
+# Discovery
 
-![bg w:95%](assets/data-engineering.png) 
-
----
-
-# How: ~~Software~~ Data Engineering principles
-
-- **TDD** / unit testing
-- Automation
-- CI/CD
-- Telemetry
-- Operability
-- Iterative and incremental approaches
+![drop-shadow bg right:70% h:90%](assets/meme.jpg)
 
 ---
 
-# Test Driven Development
+# Tableau lineage 
 
-* Write the test first :red_circle:
-* Write the code to pass the test :green_circle:
-* Keep on refactoring the logic (cleaner, more expressive)
-* Dave Farley's [TDD Is The Best Design Technique](https://www.youtube.com/watch?v=ln4WnxX-wrw)
+![drop-shadow](assets/lineage.png)
 
 ---
 
-# EL**T** Data Pipelines
+# Tableau lineage on steroids
 
-![bg h:60%](assets/elt-stack.png) 
+```javascript
+query DatasourceDetails($projectName: String!){
+  publishedDatasources(filter:{projectName: $projectName}){
+    luid
+    name
+    downstreamWorkbooks{
+      luid
+      name
+    }
+  }
+}
+```
 
----
-
-# dbt (Data Build Tool)
-
-- Open-source CLI tool to build, test and maintain data pipelines
-- Transform data in the warehouse via **SELECT** statements
-- Suitable for anyone with **SQL** skills
-- Easy to learn [fundamentals](https://courses.getdbt.com/courses/fundamentals) 
-- Built-in support **data quality checks**
-
----
-
-![bg right w:80%](assets/dbt-ref.png)
-
-# Some concepts
-
-- Jinja2 SQL templating engine
-- **Models** and **references**
-- Macros
+#### See: [Tableau Metadata API](https://help.tableau.com/current/api/metadata_api/en-us/index.html), [GraphQL](https://graphql.org/)
 
 ---
 
-# A Star Wars Data Pipeline
+# Just enough Python :snake:
 
-![bg h:60%](assets/star-wars-data-pipeline.png) 
+```Python
+with tableau_server.auth.sign_in(tableau_auth):
+    variables = {"projectName": os.environ.get('PROJECT_NAME')}
+    query = open('resources/graphql/simple_lineage.graphql').read()
 
-<!-- _footer: TDD for Data Engineering | Star Wars dataset: https://www.kaggle.com/datasets/jsphyg/star-wars -->
+    ## This is the important bit below
+    query_results = tableau_server.metadata.query(query, variables=variables)
+    with open('simple_lineage.json', 'w') as f:
+        json.dump(query_results, f)
+```
 
----
-
-# dbt-unit-testing
-
-- https://github.com/EqualExperts/dbt-unit-testing
-- Extend dbt test with unit testing capability
-- `Adopt` on the Thoughtworks [radar](https://www.thoughtworks.com/radar/tools/dbt)
-
----
-
-# A Star Wars Data Pipeline with TDD 
-
-![bg w:80%](assets/star-wars-data-pipeline-with-tdd.png) 
-
----
-# Experiences from production
-
-![bg w:95%](assets/tales-from-production.png) 
-
----
-# Data Ingestion Pipeline
-
-* Suppliers file formats (deeply nested JSON, fixed length format)
-* Parsing logic in SQL (text manipulation, regex, JSON unmarshalling in Snowflake)
-* Mock **incoming data** to validate logic
-
----
-# Data Export Pipeline
-
-* Data contract agreed with 3rd party consumer
-* Format mapping (dates, flags, phone numbers)
-* Non trivial business logic to **produce** the data
-* Mock the **in warehouse data** to validate logic
-
----
-# Data Compliance Pipeline
-
-* Respect of GDPR rules
-* Data to be erased or anonymised
-* Complicated business logic to identify suitable records (e.g. claims)
-* Complicated logic to anonymise data (back to the raw layer)
+#### See: [Tableau Server Python Client](https://github.com/tableau/server-client-python)
 
 ---
 
-# Findings
+# (Meta)Data Engineering
 
-* For anything non trivial !!!
-* TDD **guides** design (CTE vs subquery, testable features)
-* Tests make you comfortable to **refactor** code
-* Much faster **feedback loop** (compared with integration tests)
-* **Documentation** as a side effect
+![drop-shadow h:450px](assets/meta-data-engineering.png)
 
 ---
 
-# Findings: production issues
-- Write a test case to replicate the problem
-- Implement the fix 
+# Jinja template :ninja:
+
+```mermaid
+flowchart LR
+{% for ds in data.publishedDatasources %}
+    {{ ds.luid }}({{ ds.name }})
+    {% for wb in ds.downstreamWorkbooks %}
+      {% if wb.name != None %}
+          {{ wb.luid }}["{{  wb.name }}"]
+          {{ ds.luid }} --> {{ wb.luid }}
+      {% endif %}
+    {%  endfor %}
+{%  endfor %}
+```
+
+#### See: [Jinja](https://jinja.palletsprojects.com/en/3.1.x/), [MermaidJS flowcharts](https://mermaid.js.org/syntax/flowchart.html)
 
 ---
 
-# What if I don't use DBT?
+# The little mermaid :mermaid:
 
-- ELT pipelines: [SQLMesh](https://sqlmesh.com/), Google [dataform](https://cloud.google.com/dataform?hl=en)
-- TDD is a **practice**, try to apply it with your stack
-- Supported in many languages (Python, Scala)
-- Supported in many frameworks (Spark)
+![drop-shadow bg right:65% h:85%](assets/mermaid.png)
 
 ---
 
-# The data quality arsenal
+<!-- backgroundColor: LightSteelBlue -->
+# Extend right: data pipelines with dbt
 
-> Organizations need good quality data for decision-making and insights
-* TDD is one part of the puzzle :jigsaw: 
-* Integration tests
-* Data Quality Checks
-* Alerting & Monitoring
+![drop-shadow h:450px](assets/data-pipelines-with-dbt.png)
+
+---
+
+# When Business complains :scream:
+
+## The figures are incorrect!
+
+## Data could be late?
+
+## Data could be wrong?
+
+---
+
+# Operability
+
+* Data quality checks (e.g. dbt tests)
+* Slack alerts on failures
+* Not so business friendly :cry:
+
+---
+
+# From checks to **labels**
+
+![drop-shadow](assets/data-labels.png)
+
+---
+
+# Sample dbt code
+
+```yaml
+---
+models:
+  - name: tractor_sales
+    columns:
+      - name: created_at
+        tests:
+          - dbt_expectations.expect_row_values_to_have_recent_data:
+              datepart: day
+              interval: 1
+              tags: ['tableau_recency']
+```
+
+#### See: [dbt expectations](https://github.com/calogica/dbt-expectations/tree/0.10.3/)
+
+---
+
+# Just enough Python :snake:
+
+```Python
+  table_item: TableItem = tableau_server.tables.get_by_id(luid)
+
+  data_quality_warning: DQWItem = DQWItem(
+      warning_type=DQWItem.WarningType.WARNING,
+      message="This asset (Table/View) has stale data.",
+      active=True,
+      severe=True)
+
+  tableau_server.tables.add_dqw(table_item, data_quality_warning)
+```
+
+---
+
+# What does it look like?
+
+![drop-shadow](assets/data-quality-labels-example.png)
+
+---
+
+<!-- backgroundColor: PaleTurquoise -->
+
+# Shift left: should you push this to production?
+```SQL
+SELECT applicationId AS application_id,
+    datecreated as DATE_CREATED
+from transactions;
+```
+
+---
+
+# SQLFluff says NO!!!
+```text
+== [/Users/guillaumebelrose/Work/Presentations/dataconf24/dataconf-demo/resources/sql/lint.sql] FAIL                                           
+L:   1 | P:   1 | LT09 | Select targets should be on a new line unless there is
+                       | only one select target. [layout.select_targets]
+L:   1 | P:   7 | LT02 | Expected line break and indent of 4 spaces before
+                       | 'applicationId'. [layout.indent]
+L:   1 | P:   8 | CP02 | Unquoted identifiers must be consistently upper case.
+                       | [capitalisation.identifiers]
+L:   2 | P:  17 | CP01 | Keywords must be consistently upper case.
+                       | [capitalisation.keywords]
+L:   7 | P:   1 | LT12 | Files must end with a single trailing newline.
+                       | [layout.end_of_file]
+All Finished 📜 🎉!
+```
+
+---
+
+# Keeping reporting assets consistent
+
+* Naming
+  * Names | Descriptions
+  * Tags
+* Configuration
+  * Caching
+  * Database connection settings
+* **Automated checks** over written guidelines
 
 --- 
 
-<!-- _class: lead -->
+# Roll Your Own Linter
+
+![bg right:70% w:70%](assets/roll-your-own-linter.png)
+
+---
+
+# Shift left: The effects of UI-driven work
+
+### Time consuming to create | re-create
+
+### Time consuming to verify
+
+### Lack of audit trail
+
+---
+
+# Lack of release pipeline
+
+### Less appreciation for segregated environments
+
+### Dev work becomes productionised
+
+### Self-serve vs dependable data
+
+---
+
+## Data Source As Code
+
+![bg right:70% w:80%](assets/data-source-as-code.png)
+
+---
+
+# What it enables
+
+### Improved quality: dev -> qa -> prod
+
+### Common deployment patterns for reporting and data pipelines
+
+### Audit trail
+
+---
+
+<!-- backgroundColor: White -->
+
+# To recap
+
+---
+
+# Tales from production
+
+* Applied this thiking to our domain
+* Easier to adopt for green field projects
+* Many areas are ripe for automation
+* **Ways of working** just as crucial
+
+---
 
 # Thank you!
+
+## To my awesome team 
+
+## ...and the awesome audience :smile:
+
+###### PS: don't ask me about PowerBI 
