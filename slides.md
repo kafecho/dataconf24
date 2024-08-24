@@ -282,7 +282,7 @@ All Finished 📜 🎉!
 
 # Tales from production
 
-* Applied this thiking to our domain
+* Applied this thinking to our domain
 * Easier to adopt for green field projects
 * Many areas are ripe for automation
 * **Ways of working** just as crucial
